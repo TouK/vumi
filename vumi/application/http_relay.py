@@ -37,6 +37,7 @@ class HTTPRelayApplication(ApplicationWorker):
     CONFIG_CLASS = HTTPRelayConfig
 
     reply_header = 'X-Vumi-HTTPRelay-Reply'
+    end_of_session_header = 'end-of-session'
 
     def validate_config(self):
         self.supported_auth_methods = {
@@ -48,8 +49,8 @@ class HTTPRelayApplication(ApplicationWorker):
         config = self.get_static_config()
         if config.auth_method not in self.supported_auth_methods:
             raise HTTPRelayError(
-                    'HTTP Authentication method %s not supported' % (
-                    repr(config.auth_method,)))
+                    'HTTP Authentication method %s not supported' %
+                    (repr(config.auth_method,)))
 
     def generate_basic_auth_headers(self, username, password):
         credentials = ':'.join([username, password])
@@ -73,10 +74,17 @@ class HTTPRelayApplication(ApplicationWorker):
         headers = response.headers
         if response.code == http.OK:
             if headers.hasHeader(self.reply_header):
-                raw_headers = headers.getRawHeaders(self.reply_header)
+                raw_reply_headers = headers.getRawHeaders(self.reply_header)
                 content = response.delivered_body.strip()
-                if (raw_headers[0].lower() == 'true') and content:
-                    self.reply_to(message, content)
+                if (raw_reply_headers[0].lower() == 'true') and content:
+                    continue_session = True
+                    if headers.hasHeader(self.end_of_session_header):
+                        raw_end_of_session_headers = \
+                            headers.getRawHeaders(self.end_of_session_header)
+                        if raw_end_of_session_headers[0].lower() == 'true':
+                            continue_session = False
+                    self.reply_to(message, content,
+                            continue_session=continue_session)
         else:
             log.err('%s responded with %s' % (config.url.geturl(),
                                                 response.code))

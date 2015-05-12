@@ -57,6 +57,26 @@ class TestHTTPRelay(VumiTestCase):
         self.assertEqual(response['to_addr'], msg['from_addr'])
 
     @inlineCallbacks
+    def test_http_relay_success_with_end_of_session_header_true(self):
+        yield self.setup_resource(http.OK, 'thanks!', {
+            HTTPRelayApplication.reply_header: 'true',
+            HTTPRelayApplication.end_of_session_header: 'true'
+        })
+        msg = yield self.app_helper.make_dispatch_inbound("hi")
+        [response] = self.app_helper.get_dispatched_outbound()
+        self.assertEqual(response['session_event'], 'close')
+
+    @inlineCallbacks
+    def test_http_relay_success_with_end_of_session_header_false(self):
+        yield self.setup_resource(http.OK, 'thanks!', {
+            HTTPRelayApplication.reply_header: 'true',
+            HTTPRelayApplication.end_of_session_header: 'false'
+        })
+        msg = yield self.app_helper.make_dispatch_inbound("hi")
+        [response] = self.app_helper.get_dispatched_outbound()
+        self.assertEqual(response['session_event'], None)
+
+    @inlineCallbacks
     def test_http_relay_success_with_reply_header_false(self):
         yield self.setup_resource(http.OK, 'thanks!', {
             HTTPRelayApplication.reply_header: 'untrue!',
