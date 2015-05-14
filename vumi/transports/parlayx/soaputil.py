@@ -5,6 +5,7 @@ SOAP responses and parsing and constructing SOAP faults.
 """
 from twisted.web import http
 from twisted.python import log
+from vumi import log as vumilog
 
 from vumi.utils import http_request_full
 from vumi.transports.parlayx.xmlutil import (
@@ -42,6 +43,7 @@ def perform_soap_request(uri, action, body, header=None,
         a `SoapFault` in the case of failure.
     """
     def _parse_soap_response(response):
+        vumilog.debug("soap response ", response.delivered_body)
         root = fromstring(response.delivered_body)
         body, header = unwrap_soap_envelope(root)
         if response.code == http.INTERNAL_SERVER_ERROR:
@@ -49,6 +51,7 @@ def perform_soap_request(uri, action, body, header=None,
         return body, header
 
     envelope = soap_envelope(body, header)
+    vumilog.debug("soap request ", tostring(envelope))
     headers = {
         'SOAPAction': action,
         'Content-Type': 'text/xml; charset="utf-8"'}
