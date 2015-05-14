@@ -133,6 +133,7 @@ class ParlayXTransport(Transport):
             raise PermanentFailure(f)
         returnValue(f)
 
+    @inlineCallbacks
     def handle_raw_inbound_message(self, correlator, linkid, inbound_message):
         """
         Handle incoming text messages from `SmsNotificationService` callbacks.
