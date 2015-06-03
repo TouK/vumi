@@ -28,6 +28,8 @@ class HTTPRelayConfig(ApplicationWorker.CONFIG_CLASS):
         "HTTP method for submitting messages.", default='POST', static=True)
     auth_method = ConfigText(
         "HTTP authentication method.", default='basic', static=True)
+    content_type = ConfigText(
+        "HTTP Content-Type.", default='application/json', static=True)
 
     username = ConfigText("Username for HTTP authentication.", default='')
     password = ConfigText("Password for HTTP authentication.", default='')
@@ -65,10 +67,17 @@ class HTTPRelayApplication(ApplicationWorker):
             return handler(config.username, config.password)
         return {}
 
+    def get_content_type_headers(self, config):
+        config_content_type = config.content_type
+        if config_content_type:
+            return {'Content-Type': config_content_type}
+        return {}
+
     @inlineCallbacks
     def consume_user_message(self, message):
         config = yield self.get_config(message)
         headers = self.get_auth_headers(config)
+        headers.update(self.get_content_type_headers(config))
         response = yield http_request_full(config.url.geturl(),
                             message.to_json(), headers, config.http_method)
         headers = response.headers
