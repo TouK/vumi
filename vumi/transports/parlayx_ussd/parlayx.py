@@ -210,7 +210,7 @@ class ParlayXUSSDTransport(Transport):
         if session_event == TransportUserMessage.SESSION_NEW:
             # Set the content to none if this the start of the session.
             # Prevents this inbound message being mistaken as a user message.
-            content = None
+            content = inbound_message.ussdString
 
             to_addr = inbound_message.serviceCode
             session = yield self.session_manager.create_session(
