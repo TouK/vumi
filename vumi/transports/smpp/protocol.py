@@ -20,6 +20,8 @@ from vumi import log
 from vumi.transports.smpp.pdu_utils import (
     pdu_ok, seq_no, command_status, command_id, message_id, chop_pdu_stream)
 
+import binascii
+
 GSM_MAX_SMS_BYTES = 140
 GSM_MAX_SMS_7BIT_CHARS = 160
 
@@ -42,6 +44,7 @@ class EsmeTransceiver(Protocol):
     bind_pdu = BindTransceiver
     clock = reactor
     noisy = True
+    very_noisy = True
     unbind_timeout = 2
 
     OPEN_STATE = 'OPEN'
@@ -83,6 +86,10 @@ class EsmeTransceiver(Protocol):
 
     def emit(self, msg):
         if self.noisy:
+            log.debug(msg)
+
+    def very_noisy_emit(self, msg):
+        if self.very_noisy:
             log.debug(msg)
 
     def connectionMade(self):
@@ -201,12 +208,15 @@ class EsmeTransceiver(Protocol):
             The PDU object to send.
         """
         self.emit('OUTGOING >> %r' % (pdu.get_obj(),))
+        self.very_noisy_emit('OUTGOING raw >> %s' % (pdu.get_hex(),))
         return self.transport.write(pdu.get_bin())
 
     def dataReceived(self, data):
         self.buffer += data
         data = self.handle_buffer()
         while data is not None:
+            self.very_noisy_emit(
+                'INCOMING raw << %s' % (binascii.b2a_hex(data),))
             self.on_pdu(unpack_pdu(data))
             data = self.handle_buffer()
 
