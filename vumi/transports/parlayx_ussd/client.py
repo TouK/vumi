@@ -120,7 +120,7 @@ class ParlayXUSSDClient(object):
             header=header,
             expected_faults=[ServiceException])
 
-    def send_ussd(self, to_addr, content, senderCB, msgType, ussdOpType, serviceCode,
+    def send_ussd(self, to_addr, content, senderCB,receiveCB, msgType, ussdOpType, serviceCode,
                   codeScheme, linkid=None):
         """
         Send an USSD.
@@ -131,7 +131,7 @@ class ParlayXUSSDClient(object):
         body = SEND_NS.sendUssd(
             SEND_NS.msgType(msgType),
             SEND_NS.senderCB(senderCB),
-            SEND_NS.receiveCB(senderCB),
+            SEND_NS.receiveCB(receiveCB),
             SEND_NS.ussdOpType(ussdOpType),
             SEND_NS.msIsdn(format_address(to_addr)),
             SEND_NS.serviceCode(serviceCode),
