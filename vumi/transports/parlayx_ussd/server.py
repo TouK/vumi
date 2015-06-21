@@ -112,6 +112,26 @@ class USSDNotificationService(Resource):
         """
         raise SoapFault(u'soapenv:Server', u'No handler for %s' % (name,))
 
+    def process_notifyUssdAbort(self, root, header, name):
+        """
+        Process a received text message.
+        """
+        linkid = None
+        if header is not None:
+            linkid = gettext(header, './/' + str(PARLAYX_COMMON_NS.linkid))
+
+        # correlator = gettext(root, NOTIFICATION_NS.correlator)
+        message = USSDMessage.from_element(root)
+        log.err("received ussd message " + str(self.callback_message_received))
+        d = maybeDeferred(self.empty)
+        # self.callback_message_received( message.senderCB, linkid, message)
+        d.addCallback(
+            lambda ignored: NOTIFICATION_NS.notifyUssdAbortResponse(NOTIFICATION_NS.result('0')))
+        return d
+
+    def empty(self) :
+        return self
+
     def process_notifyUssdReception(self, root, header, name):
         """
         Process a received text message.

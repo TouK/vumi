@@ -132,22 +132,28 @@ class ParlayXUSSDTransport(Transport):
         log.info('Sending USSD via ParlayX: %r' % (message.to_json(),))
         session_event = message['session_event']
         parlayx_ussd = message.get('transport_metadata', {}).get('parlayx_ussd', {})
-        senderCB = parlayx_ussd[1]
+        # set senderCB as receiveCB
+        senderCB = parlayx_ussd[2]
+        receiveCB = parlayx_ussd[1]
         # msgType = parlayx_ussd[0]
         # ussdOpType = parlayx_ussd[3]
         serviceCode = parlayx_ussd[5]
         codeScheme = parlayx_ussd[6]
+
         if session_event == 'close':
             msgType = '2'
             ussdOpType = '3'
+            d = self._parlayx_client.send_ussd_abort(
+                        message['to_addr'],
+                        message['content'],
+                        message['message_id'])
         else:
             msgType = '1'
             ussdOpType = '1'
-
-        d = self._parlayx_client.send_ussd(
-            message['to_addr'],
-            message['content'],
-            senderCB, msgType, ussdOpType, serviceCode, codeScheme)
+            d = self._parlayx_client.send_ussd(
+                message['to_addr'],
+                message['content'],
+                senderCB, receiveCB, msgType, ussdOpType, serviceCode, codeScheme)
         d.addErrback(self.handle_outbound_message_failure, message)
         d.addCallback(
             lambda requestIdentifier: self.publish_ack(
