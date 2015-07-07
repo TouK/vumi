@@ -38,8 +38,8 @@ class BridgeConfig(ApplicationWorker.CONFIG_CLASS):
 class BridgeApplication(ApplicationWorker):
     CONFIG_CLASS = BridgeConfig
 
-    reply_header = 'bridge-key'
-    reply_header_good_value = 'troll'
+    reply_header = 'X-Vumi-HTTPRelay-Reply'
+    reply_header_good_value = 'true'
     end_of_session_header = 'end-of-session'
 
     def validate_config(self):
